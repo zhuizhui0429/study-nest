@@ -3,8 +3,12 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { AllExceptionFilter } from './execption.filter';
 import { LoggingInterceptor, TransformInterceptor } from './interceptors/index';
+import * as express from 'express';
+import { join } from 'path';
 async function bootstrap() {
+  const rootDir = join(__dirname, '..');
   const app = await NestFactory.create(AppModule);
+  app.use('/assets', express.static(join(rootDir, 'public')));
   app.enableCors({
     origin: [/http:\/\/localhost/],
     methods: ['get', 'post'],
