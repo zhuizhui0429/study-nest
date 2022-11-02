@@ -1,4 +1,4 @@
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, Reflector } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { AllExceptionFilter } from './execption.filter';
@@ -8,7 +8,9 @@ import { join } from 'path';
 async function bootstrap() {
   const rootDir = join(__dirname, '..');
   const app = await NestFactory.create(AppModule);
-  app.use('/assets', express.static(join(rootDir, 'public')));
+  app.use('/assets/images', express.static(join(rootDir, 'assets', 'images')));
+  // app.use('/assets/videos', express.static(join(rootDir, 'assets', 'videos')));
+  // app.use('/assets/files', express.static(join(rootDir, 'assets', 'files')));
   app.enableCors({
     origin: [/http:\/\/localhost/],
     methods: ['get', 'post'],
@@ -17,7 +19,7 @@ async function bootstrap() {
   app.useGlobalFilters(new AllExceptionFilter()); // 全局使用AllExceptionFilter处理错误
   app.useGlobalInterceptors(
     new LoggingInterceptor(),
-    new TransformInterceptor(),
+    new TransformInterceptor(new Reflector()),
   ); // 注册全局拦截器
   // 添加全局中间件
   // app.use((req, res, next) => {
