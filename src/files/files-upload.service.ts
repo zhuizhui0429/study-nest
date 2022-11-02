@@ -1,11 +1,26 @@
 import { Injectable } from '@nestjs/common';
-import { CreateFilesUploadDto } from './dto/create-files-upload.dto';
-import { UpdateFilesUploadDto } from './dto/update-files-upload.dto';
-
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { File } from './entities/file.entity';
 @Injectable()
 export class FilesUploadService {
-  create(createFilesUploadDto: CreateFilesUploadDto) {
-    return 'This action adds a new filesUpload';
+  constructor(
+    @InjectRepository(File) private FileRepository: Repository<File>,
+  ) {}
+  async create(...files: (Express.Multer.File & Record<'url', string>)[]) {
+    return await this.FileRepository.save(
+      files.map((file) => {
+        const { originalname, size, url } = file;
+        const index = originalname.lastIndexOf('.');
+        return {
+          fileName: originalname.slice(0, index),
+          type: originalname.slice(index + 1),
+          size,
+          url,
+          uid: Math.random().toString(),
+        };
+      }),
+    );
   }
 
   findAll() {
@@ -14,10 +29,6 @@ export class FilesUploadService {
 
   findOne(id: number) {
     return `This action returns a #${id} filesUpload`;
-  }
-
-  update(id: number, updateFilesUploadDto: UpdateFilesUploadDto) {
-    return `This action updates a #${id} filesUpload`;
   }
 
   remove(id: number) {
