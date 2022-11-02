@@ -7,6 +7,13 @@ import { join } from 'path';
 @Module({
   imports: [
     MulterModule.register({
+      fileFilter(req, file, cb) {
+        // 解决中文名乱码的问题 latin1 是一种编码格式
+        file.originalname = Buffer.from(file.originalname, 'latin1').toString(
+          'utf8',
+        );
+        cb(null, true);
+      },
       storage: diskStorage({
         //destination为函数时，需要手动创建相应的目录
         destination(req, file, cb) {
@@ -28,6 +35,7 @@ import { join } from 'path';
         },
         filename(req, file, cb) {
           const { originalname } = file;
+          console.log('原始文件名', originalname);
           const index = originalname.lastIndexOf('.');
           const fileName = originalname.slice(0, index);
           const filetype = originalname.slice(index + 1);
