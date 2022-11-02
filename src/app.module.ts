@@ -4,6 +4,9 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CatsModule } from './cats/cats.module';
 import { UserModule } from './user/user.module';
+
+import { FilesUploadModule } from './files/files-upload.module';
+
 @Module({
   imports: [
     TypeOrmModule.forRoot({
@@ -20,6 +23,7 @@ import { UserModule } from './user/user.module';
     }),
     CatsModule,
     UserModule,
+    FilesUploadModule,
   ],
   controllers: [AppController],
   providers: [AppService],
