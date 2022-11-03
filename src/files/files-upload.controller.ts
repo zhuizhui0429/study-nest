@@ -29,6 +29,10 @@ const CHUNKS_PREFIX = 'chunks-of-';
 type mergeInfo = {
   chunkSize: number;
   fileName: string;
+  /**
+   * 文件内容hash
+   */
+  hash: string;
 };
 @Controller('file')
 export class FilesUploadController {
@@ -78,12 +82,12 @@ export class FilesUploadController {
           throw new Error(err.message);
         }
         const [hash] = fields.hash;
-        const [filename] = fields.filename;
         const [file] = files.file;
         num = Number(hash.split('-')[1]);
+        console.log('hash', hash);
         const cur_slice_dir = join(
           SLICE_UPLOAD_DIR,
-          `${CHUNKS_PREFIX}${filename}`,
+          `${CHUNKS_PREFIX}${hash.split('-')[0]}`,
         );
         if (!fse.existsSync(cur_slice_dir)) {
           await fse.mkdirs(cur_slice_dir);
@@ -97,11 +101,17 @@ export class FilesUploadController {
   }
   @Post('slice-merge')
   async mergeSlice(@Body() mergeInfo: mergeInfo) {
-    const { chunkSize, fileName } = mergeInfo;
-    const chunksPath = join(SLICE_UPLOAD_DIR, `${CHUNKS_PREFIX}${fileName}`);
+    const { chunkSize, fileName, hash } = mergeInfo;
+    const chunksPath = join(SLICE_UPLOAD_DIR, `${CHUNKS_PREFIX}${hash}`);
     await mergeFileChunks(
       chunksPath,
-      join(__dirname, '..', '..', 'assets/videos', getRandomFileName(fileName)),
+      join(
+        __dirname,
+        '..',
+        '..',
+        'assets/videos',
+        getRandomFileName(hash + fileName),
+      ),
       chunkSize,
     );
     return '文件切片合并成功';
