@@ -17,14 +17,13 @@ export class FilesUploadService {
           type: originalname.slice(index + 1),
           size,
           url,
-          uid: Math.random().toString(),
         };
       }),
     );
   }
 
-  findAll() {
-    return `This action returns all filesUpload`;
+  async findAll() {
+    return await this.FileRepository.find();
   }
 
   findOne(id: number) {

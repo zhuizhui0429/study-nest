@@ -1,7 +1,10 @@
-import { Column, PrimaryColumn, Entity } from 'typeorm';
+import { Column, PrimaryGeneratedColumn, Entity } from 'typeorm';
 @Entity()
 export class File {
-  @PrimaryColumn('uuid')
+  /**
+   * 主键自动生成uuid字符串
+   */
+  @PrimaryGeneratedColumn('uuid')
   uid: string;
   @Column({ length: 255 })
   fileName: string;

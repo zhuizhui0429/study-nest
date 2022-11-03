@@ -6,6 +6,7 @@ import { diskStorage } from 'multer';
 import { File } from './entities/file.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { join } from 'path';
+import { getRandomFileName } from '../utils/file';
 const acceptMimeTypes = ['image', 'video'];
 @Module({
   imports: [
@@ -62,12 +63,7 @@ const acceptMimeTypes = ['image', 'video'];
           cb,
         ) {
           const { originalname } = file;
-          const index = originalname.lastIndexOf('.');
-          const fileName = originalname.slice(0, index);
-          const filetype = originalname.slice(index + 1);
-          const name = `${fileName}-${Math.random()
-            .toString(36)
-            .slice(-8)}.${filetype}`;
+          const name = getRandomFileName(originalname);
           file.url = `http://localhost:3000/assets/${file.assetType}/${name}`;
           cb(null, name);
         },

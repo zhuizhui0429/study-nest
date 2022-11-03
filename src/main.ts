@@ -9,8 +9,8 @@ async function bootstrap() {
   const rootDir = join(__dirname, '..');
   const app = await NestFactory.create(AppModule);
   app.use('/assets/images', express.static(join(rootDir, 'assets', 'images')));
-  // app.use('/assets/videos', express.static(join(rootDir, 'assets', 'videos')));
-  // app.use('/assets/files', express.static(join(rootDir, 'assets', 'files')));
+  app.use('/assets/videos', express.static(join(rootDir, 'assets', 'videos')));
+  app.use('/assets/files', express.static(join(rootDir, 'assets', 'files')));
   app.enableCors({
     origin: [/http:\/\/localhost/],
     methods: ['get', 'post'],
@@ -18,7 +18,7 @@ async function bootstrap() {
   app.setGlobalPrefix(''); //设置全局的路由基路径
   app.useGlobalFilters(new AllExceptionFilter()); // 全局使用AllExceptionFilter处理错误
   app.useGlobalInterceptors(
-    new LoggingInterceptor(),
+    new LoggingInterceptor(new Reflector()),
     new TransformInterceptor(new Reflector()),
   ); // 注册全局拦截器
   // 添加全局中间件

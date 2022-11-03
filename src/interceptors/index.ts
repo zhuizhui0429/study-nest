@@ -12,14 +12,23 @@ import { tap, map } from 'rxjs/operators';
  */
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
+  constructor(private reflector: Reflector) {}
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-    console.log('整个请求开始～');
+    const ctx = context.switchToHttp();
+    const { url } = ctx.getRequest();
+    const notNeedLogger = this.reflector.get<boolean>(
+      'notNeedLogger',
+      context.getHandler(),
+    );
+    !notNeedLogger && console.log(`请求${url}开始～`);
     const now = Date.now();
     return next
       .handle()
       .pipe(
-        tap(() =>
-          console.log(`整个请求结束...,花费时间: ${Date.now() - now}ms`),
+        tap(
+          () =>
+            !notNeedLogger &&
+            console.log(`请求${url}结束...,花费时间: ${Date.now() - now}ms`),
         ),
       );
   }
