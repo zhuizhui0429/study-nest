@@ -23,7 +23,7 @@ import {
   unlinkSync,
   rmdirSync,
 } from 'fs';
-import { getRandomFileName, getFileExt, getStorageType } from '../utils/file';
+import { getFileExt, getStorageType } from '../utils/file';
 const SLICE_UPLOAD_DIR = join(__dirname, '..', '..', 'slice-upload');
 const CHUNKS_PREFIX = 'chunks-of-';
 type mergeInfo = {
@@ -33,6 +33,7 @@ type mergeInfo = {
    * 文件内容hash
    */
   hash: string;
+  mimeType: string;
 };
 @Controller('file')
 export class FilesUploadController {
@@ -100,25 +101,27 @@ export class FilesUploadController {
   }
   @Post('slice-merge')
   async mergeSlice(@Body() mergeInfo: mergeInfo) {
-    const { chunkSize, fileName, hash } = mergeInfo;
+    const { chunkSize, fileName, hash, mimeType } = mergeInfo;
     const chunksPath = join(SLICE_UPLOAD_DIR, `${CHUNKS_PREFIX}${hash}`);
     const targetFilePath = join(
       __dirname,
       '..',
       '..',
-      'assets/videos',
+      'assets',
+      getStorageType(mimeType),
       `${hash}.${getFileExt(fileName)}`,
     );
     await mergeFileChunks(chunksPath, targetFilePath, chunkSize);
     return '文件切片合并成功';
   }
   @Post('verify-should-upload')
-  verifyShouldUpload(
+  async verifyShouldUpload(
     @Body('hash') hash: string,
     @Body('mimeType') mimeType: string,
     @Body('fileName') fileName: string,
   ) {
     const name = `${hash}.${getFileExt(fileName)}`;
+    // 存储资源的path
     const dirPath = join(
       __dirname,
       '..',
@@ -126,13 +129,26 @@ export class FilesUploadController {
       'assets',
       getStorageType(mimeType),
     );
+    // 存储切片的path
+    const slicePath = join(
+      __dirname,
+      '..',
+      '..',
+      'slice-upload',
+      `chunks-of-${hash}`,
+    );
     if (existsSync(join(dirPath, name))) {
       return {
         shouldUpload: false,
+        uploadedFilesHash: [],
       };
     }
+    const uploadedFilesHash = existsSync(slicePath)
+      ? await fse.readdir(slicePath)
+      : [];
     return {
       shouldUpload: true,
+      uploadedFilesHash: uploadedFilesHash,
     };
   }
 }
