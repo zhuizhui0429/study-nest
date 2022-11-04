@@ -23,7 +23,7 @@ import {
   unlinkSync,
   rmdirSync,
 } from 'fs';
-import { getRandomFileName } from '../utils/file';
+import { getRandomFileName, getFileExt, getStorageType } from '../utils/file';
 const SLICE_UPLOAD_DIR = join(__dirname, '..', '..', 'slice-upload');
 const CHUNKS_PREFIX = 'chunks-of-';
 type mergeInfo = {
@@ -84,7 +84,6 @@ export class FilesUploadController {
         const [hash] = fields.hash;
         const [file] = files.file;
         num = Number(hash.split('-')[1]);
-        console.log('hash', hash);
         const cur_slice_dir = join(
           SLICE_UPLOAD_DIR,
           `${CHUNKS_PREFIX}${hash.split('-')[0]}`,
@@ -103,18 +102,38 @@ export class FilesUploadController {
   async mergeSlice(@Body() mergeInfo: mergeInfo) {
     const { chunkSize, fileName, hash } = mergeInfo;
     const chunksPath = join(SLICE_UPLOAD_DIR, `${CHUNKS_PREFIX}${hash}`);
-    await mergeFileChunks(
-      chunksPath,
-      join(
-        __dirname,
-        '..',
-        '..',
-        'assets/videos',
-        getRandomFileName(hash + fileName),
-      ),
-      chunkSize,
+    const targetFilePath = join(
+      __dirname,
+      '..',
+      '..',
+      'assets/videos',
+      `${hash}.${getFileExt(fileName)}`,
     );
+    await mergeFileChunks(chunksPath, targetFilePath, chunkSize);
     return '文件切片合并成功';
+  }
+  @Post('verify-should-upload')
+  verifyShouldUpload(
+    @Body('hash') hash: string,
+    @Body('mimeType') mimeType: string,
+    @Body('fileName') fileName: string,
+  ) {
+    const name = `${hash}.${getFileExt(fileName)}`;
+    const dirPath = join(
+      __dirname,
+      '..',
+      '..',
+      'assets',
+      getStorageType(mimeType),
+    );
+    if (existsSync(join(dirPath, name))) {
+      return {
+        shouldUpload: false,
+      };
+    }
+    return {
+      shouldUpload: true,
+    };
   }
 }
 async function mergeFileChunks(
